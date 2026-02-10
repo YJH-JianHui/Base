@@ -1,17 +1,15 @@
-server:
-  port: 10086  # 1. ??????? 10086
-
 spring:
+  profiles:
+    # 这里决定当前启动哪个环境。
+    active: dev1
+
   threads:
     virtual:
-      enabled: true  # ??????
-  autoconfigure:
-    exclude:
-      # 1. ???????
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
-      # 2. ???????
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
-      # 3. ?? MyBatis Plus
-      - com.baomidou.mybatisplus.autoconfigure.MybatisPlusAutoConfiguration
-      # 4. ?? Redis
-      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      enabled: true  # 虚拟线程通常所有环境都开启
+
+# MyBatis Plus 公共逻辑配置
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: cn.kmdckj.base
+  configuration:
+    map-underscore-to-camel-case: true
