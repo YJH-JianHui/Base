@@ -1,0 +1,7 @@
+package cn.kmdckj.base.mapper;
+
+/**
+ * 自定义字段定义访问层接口。
+ */
+public interface CustomFieldDefineMapper {
+}
