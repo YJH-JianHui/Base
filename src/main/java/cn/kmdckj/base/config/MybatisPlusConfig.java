@@ -52,13 +52,4 @@ public class MybatisPlusConfig {
 
         return interceptor;
     }
-
-    /**
-     * 自动填充处理器
-     * 用于自动填充 create_time 和 update_time
-     */
-    @Bean
-    public MyMetaObjectHandler myMetaObjectHandler() {
-        return new MyMetaObjectHandler();
-    }
 }

@@ -36,10 +36,6 @@ public class CacheConstants {
     public static final String CUSTOM_FIELD_DEFINE_PREFIX = CACHE_PREFIX + "custom_field:define:";
 
     /**
-     * 登录token缓存key前缀
-     */
-    public static final String LOGIN_TOKEN_PREFIX = CACHE_PREFIX + "login:token:";
-    /**
      * 默认缓存过期时间（秒）- 30分钟
      */
     public static final long DEFAULT_EXPIRE_TIME = 30 * 60;
@@ -59,6 +55,14 @@ public class CacheConstants {
      * 自定义字段定义缓存过期时间（秒）- 1小时
      */
     public static final long CUSTOM_FIELD_DEFINE_EXPIRE_TIME = 60 * 60;
+
+    /**
+     * 用户Token缓存key
+     * key格式: base:user:token:{userId}
+     */
+    public static String getUserTokenKey(Long userId) {
+        return USER_PREFIX + "token:" + userId;
+    }
 
     /**
      * 用户权限缓存key
@@ -122,13 +126,5 @@ public class CacheConstants {
      */
     public static String getCustomFieldDefineKey(Long tenantId, String entityCode) {
         return CUSTOM_FIELD_DEFINE_PREFIX + tenantId + ":" + entityCode;
-    }
-
-    /**
-     * 登录token缓存key
-     * key格式: base:login:token:{token}
-     */
-    public static String getLoginTokenKey(String token) {
-        return LOGIN_TOKEN_PREFIX + token;
     }
 }

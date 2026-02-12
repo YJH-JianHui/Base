@@ -20,3 +20,10 @@ spring:
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 开发环境打印SQL
+
+# JWT 配置
+jwt:
+  # JWT密钥（生产环境请修改为随机生成的强密钥，长度必须 >= 256位）
+  secret-key: Base_Project_JWT_Secret_Key_Must_Be_At_Least_256_Bits_Long
+  # Token过期时间（毫秒），默认7天
+  expiration: 604800000
