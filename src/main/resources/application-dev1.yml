@@ -27,3 +27,7 @@ jwt:
   secret-key: Base_Project_JWT_Secret_Key_Must_Be_At_Least_256_Bits_Long
   # Token过期时间（毫秒），默认7天
   expiration: 604800000
+
+logging:
+  level:
+    cn.kmdckj.base: debug # 业务代码只打印 debug 以上级别

@@ -1,16 +1,17 @@
 package cn.kmdckj.base.interceptor;
 
+import cn.kmdckj.base.common.constant.CacheConstants;
 import cn.kmdckj.base.common.context.SecurityContext;
 import cn.kmdckj.base.common.context.TenantContext;
 import cn.kmdckj.base.common.result.Result;
 import cn.kmdckj.base.common.result.ResultCode;
+import cn.kmdckj.base.service.cache.CacheService;
 import cn.kmdckj.base.util.TokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -27,12 +28,14 @@ public class AuthInterceptor implements HandlerInterceptor {
      * Token 请求头名称
      */
     private static final String TOKEN_HEADER = "Authorization";
+
     /**
      * Bearer Token前缀
      */
     private static final String TOKEN_PREFIX = "Bearer ";
+
     @Autowired
-    private StringRedisTemplate redisTemplate;
+    private CacheService cacheService;
 
     /**
      * 前置处理
@@ -75,6 +78,30 @@ public class AuthInterceptor implements HandlerInterceptor {
             return false;
         }
 
+        // 校验缓存中的Token是否有效（处理登出失效）
+        try {
+            // 使用 CacheService 从缓存获取Token
+            String cachedToken = cacheService.get(
+                    CacheConstants.CACHE_LOGIN_TOKEN,
+                    userId.toString(),
+                    String.class
+            );
+
+            if (cachedToken == null || !cachedToken.equals(token)) {
+                log.warn("Token已失效或被顶号，userId: {}", userId);
+                sendUnauthorizedResponse(response, "Token已失效，请重新登录");
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("缓存校验Token失败: {}", e.getMessage());
+            // 缓存故障时的处理策略：
+            // 1. 严格模式：拒绝访问（推荐生产环境）
+            // 2. 宽松模式：只验证JWT本身的有效性
+            // 这里采用严格模式
+            sendUnauthorizedResponse(response, "系统繁忙，请稍后重试");
+            return false;
+        }
+
         // 设置上下文
         SecurityContext.setUserId(userId);
         SecurityContext.setUsername(username);
@@ -82,23 +109,6 @@ public class AuthInterceptor implements HandlerInterceptor {
 
         if (tenantId != null) {
             TenantContext.setTenantId(tenantId);
-        }
-
-        // 校验Redis中的Token是否有效（处理登出失效）
-        try {
-            // key格式: base:user:token:{userId}
-            String redisKey = cn.kmdckj.base.common.constant.CacheConstants.getUserTokenKey(userId);
-            String redisToken = redisTemplate.opsForValue().get(redisKey);
-            if (redisToken == null || !redisToken.equals(token)) {
-                log.warn("Token已失效或被顶号，userId: {}", userId);
-                sendUnauthorizedResponse(response, "Token已失效，请重新登录");
-                return false;
-            }
-        } catch (Exception e) {
-            log.error("Redis校验Token失败，不放行: {}", e.getMessage());
-            // 如果Redis无法连接，为了可用性通常选择放行（取决于安全策略）
-            // 这里选择不放行，避免Redis挂了导致全站不可用
-            return false;
         }
 
         log.debug("认证通过，userId: {}, username: {}, tenantId: {}", userId, username, tenantId);
