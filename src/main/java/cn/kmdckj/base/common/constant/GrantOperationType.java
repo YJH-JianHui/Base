@@ -1,0 +1,4 @@
+package cn.kmdckj.base.common.constant;
+
+public class GrantOperationType {
+}

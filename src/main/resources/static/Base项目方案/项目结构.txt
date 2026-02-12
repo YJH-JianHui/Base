@@ -1,0 +1,263 @@
+Base
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── cn
+│   │   │       └── kmdckj
+│   │   │           └── base
+│   │   │               ├── BaseApplication.java
+│   │   │               │
+│   │   │               ├── common                          # 公共模块
+│   │   │               │   ├── constant                    # 常量
+│   │   │               │   │   ├── CacheConstants.java     # 缓存常量
+│   │   │               │   │   ├── DataScopeType.java      # 数据范围类型枚举
+│   │   │               │   │   ├── FieldPermissionType.java # 字段权限类型枚举
+│   │   │               │   │   ├── OperationType.java      # 操作类型枚举
+│   │   │               │   │   └── RoleLevel.java          # 角色层级常量
+│   │   │               │   │
+│   │   │               │   ├── result                      # 统一响应
+│   │   │               │   │   ├── Result.java             # 统一返回对象
+│   │   │               │   │   ├── ResultCode.java         # 返回码枚举
+│   │   │               │   │   └── PageResult.java         # 分页返回对象
+│   │   │               │   │
+│   │   │               │   ├── exception                   # 异常处理
+│   │   │               │   │   ├── BaseException.java      # 业务异常基类
+│   │   │               │   │   ├── BusinessException.java  # 业务异常
+│   │   │               │   │   ├── PermissionException.java # 权限异常
+│   │   │               │   │   └── GlobalExceptionHandler.java # 全局异常处理器
+│   │   │               │   │
+│   │   │               │   └── context                     # 上下文
+│   │   │               │       ├── TenantContext.java      # 租户上下文
+│   │   │               │       └── SecurityContext.java    # 安全上下文
+│   │   │               │
+│   │   │               ├── config                          # 配置类
+│   │   │               │   ├── MybatisPlusConfig.java      # MyBatis Plus配置
+│   │   │               │   ├── RedisConfig.java            # Redis配置
+│   │   │               │   ├── WebMvcConfig.java           # Web MVC配置
+│   │   │               │   └── ThreadPoolConfig.java       # 线程池配置
+│   │   │               │
+│   │   │               ├── interceptor                     # 拦截器
+│   │   │               │   ├── TenantInterceptor.java      # 租户拦截器(MyBatis)
+│   │   │               │   ├── DataPermissionInterceptor.java # 数据权限拦截器
+│   │   │               │   └── AuthInterceptor.java        # 认证拦截器(Web)
+│   │   │               │
+│   │   │               ├── entity                          # 实体类(对应数据库表)
+│   │   │               │   ├── base                        # 基础实体
+│   │   │               │   │   ├── BaseEntity.java         # 基础实体(create_time, update_time)
+│   │   │               │   │   └── TenantEntity.java       # 租户实体(继承BaseEntity + tenant_id)
+│   │   │               │   │
+│   │   │               │   ├── Tenant.java
+│   │   │               │   ├── Department.java
+│   │   │               │   ├── User.java
+│   │   │               │   ├── Role.java
+│   │   │               │   ├── UserRole.java
+│   │   │               │   ├── Resource.java
+│   │   │               │   ├── Operation.java
+│   │   │               │   ├── Permission.java
+│   │   │               │   ├── RolePermission.java
+│   │   │               │   ├── DataPermissionRule.java
+│   │   │               │   ├── FieldResource.java
+│   │   │               │   ├── FieldPermissionRule.java
+│   │   │               │   ├── GrantablePermission.java
+│   │   │               │   ├── GrantableDataScope.java
+│   │   │               │   ├── GrantableFieldPermission.java
+│   │   │               │   ├── GrantOperationLog.java
+│   │   │               │   ├── DataAccessLog.java
+│   │   │               │   ├── CustomFieldDefine.java
+│   │   │               │   ├── CustomFieldValue.java
+│   │   │               │   └── CustomFieldSearch.java
+│   │   │               │
+│   │   │               ├── dto                             # 数据传输对象
+│   │   │               │   ├── auth                        # 认证相关
+│   │   │               │   │   ├── LoginDTO.java
+│   │   │               │   │   └── UserInfoDTO.java
+│   │   │               │   │
+│   │   │               │   ├── tenant
+│   │   │               │   │   ├── TenantSaveDTO.java
+│   │   │               │   │   └── TenantQueryDTO.java
+│   │   │               │   │
+│   │   │               │   ├── user
+│   │   │               │   │   ├── UserSaveDTO.java
+│   │   │               │   │   ├── UserQueryDTO.java
+│   │   │               │   │   └── UserRoleAssignDTO.java
+│   │   │               │   │
+│   │   │               │   ├── role
+│   │   │               │   │   ├── RoleSaveDTO.java
+│   │   │               │   │   ├── RoleQueryDTO.java
+│   │   │               │   │   ├── RolePermissionAssignDTO.java
+│   │   │               │   │   ├── DataScopeAssignDTO.java
+│   │   │               │   │   └── FieldPermissionAssignDTO.java
+│   │   │               │   │
+│   │   │               │   ├── permission
+│   │   │               │   │   ├── PermissionSaveDTO.java
+│   │   │               │   │   └── PermissionQueryDTO.java
+│   │   │               │   │
+│   │   │               │   └── customfield
+│   │   │               │       ├── CustomFieldDefineDTO.java
+│   │   │               │       ├── CustomFieldQueryDTO.java
+│   │   │               │       └── CustomFieldFilter.java
+│   │   │               │
+│   │   │               ├── vo                              # 视图对象
+│   │   │               │   ├── auth
+│   │   │               │   │   ├── LoginVO.java
+│   │   │               │   │   └── UserPermissionVO.java
+│   │   │               │   │
+│   │   │               │   ├── tenant
+│   │   │               │   │   └── TenantVO.java
+│   │   │               │   │
+│   │   │               │   ├── user
+│   │   │               │   │   ├── UserVO.java
+│   │   │               │   │   └── UserDetailVO.java
+│   │   │               │   │
+│   │   │               │   ├── role
+│   │   │               │   │   ├── RoleVO.java
+│   │   │               │   │   └── RoleDetailVO.java
+│   │   │               │   │
+│   │   │               │   ├── permission
+│   │   │               │   │   ├── PermissionVO.java
+│   │   │               │   │   ├── PermissionTreeVO.java
+│   │   │               │   │   ├── DataScopeVO.java
+│   │   │               │   │   └── FieldPermissionVO.java
+│   │   │               │   │
+│   │   │               │   ├── resource
+│   │   │               │   │   ├── ResourceVO.java
+│   │   │               │   │   └── ResourceTreeVO.java
+│   │   │               │   │
+│   │   │               │   └── customfield
+│   │   │               │       ├── CustomFieldDefineVO.java
+│   │   │               │       └── CustomFieldValueVO.java
+│   │   │               │
+│   │   │               ├── mapper                          # MyBatis Mapper接口
+│   │   │               │   ├── TenantMapper.java
+│   │   │               │   ├── DepartmentMapper.java
+│   │   │               │   ├── UserMapper.java
+│   │   │               │   ├── RoleMapper.java
+│   │   │               │   ├── UserRoleMapper.java
+│   │   │               │   ├── ResourceMapper.java
+│   │   │               │   ├── OperationMapper.java
+│   │   │               │   ├── PermissionMapper.java
+│   │   │               │   ├── RolePermissionMapper.java
+│   │   │               │   ├── DataPermissionRuleMapper.java
+│   │   │               │   ├── FieldResourceMapper.java
+│   │   │               │   ├── FieldPermissionRuleMapper.java
+│   │   │               │   ├── GrantablePermissionMapper.java
+│   │   │               │   ├── GrantableDataScopeMapper.java
+│   │   │               │   ├── GrantableFieldPermissionMapper.java
+│   │   │               │   ├── GrantOperationLogMapper.java
+│   │   │               │   ├── DataAccessLogMapper.java
+│   │   │               │   ├── CustomFieldDefineMapper.java
+│   │   │               │   ├── CustomFieldValueMapper.java
+│   │   │               │   └── CustomFieldSearchMapper.java
+│   │   │               │
+│   │   │               ├── service                         # 服务接口
+│   │   │               │   ├── auth
+│   │   │               │   │   └── AuthService.java
+│   │   │               │   │
+│   │   │               │   ├── tenant
+│   │   │               │   │   └── TenantService.java
+│   │   │               │   │
+│   │   │               │   ├── user
+│   │   │               │   │   └── UserService.java
+│   │   │               │   │
+│   │   │               │   ├── role
+│   │   │               │   │   └── RoleService.java
+│   │   │               │   │
+│   │   │               │   ├── permission
+│   │   │               │   │   ├── PermissionService.java
+│   │   │               │   │   ├── DataPermissionService.java
+│   │   │               │   │   ├── FieldPermissionService.java
+│   │   │               │   │   └── GrantPermissionService.java
+│   │   │               │   │
+│   │   │               │   ├── resource
+│   │   │               │   │   └── ResourceService.java
+│   │   │               │   │
+│   │   │               │   ├── customfield
+│   │   │               │   │   ├── CustomFieldService.java
+│   │   │               │   │   └── CustomFieldSearchService.java
+│   │   │               │   │
+│   │   │               │   └── log
+│   │   │               │       ├── GrantOperationLogService.java
+│   │   │               │       └── DataAccessLogService.java
+│   │   │               │
+│   │   │               ├── service.impl                    # 服务实现
+│   │   │               │   ├── auth
+│   │   │               │   │   └── AuthServiceImpl.java
+│   │   │               │   │
+│   │   │               │   ├── tenant
+│   │   │               │   │   └── TenantServiceImpl.java
+│   │   │               │   │
+│   │   │               │   ├── user
+│   │   │               │   │   └── UserServiceImpl.java
+│   │   │               │   │
+│   │   │               │   ├── role
+│   │   │               │   │   └── RoleServiceImpl.java
+│   │   │               │   │
+│   │   │               │   ├── permission
+│   │   │               │   │   ├── PermissionServiceImpl.java
+│   │   │               │   │   ├── DataPermissionServiceImpl.java
+│   │   │               │   │   ├── FieldPermissionServiceImpl.java
+│   │   │               │   │   └── GrantPermissionServiceImpl.java
+│   │   │               │   │
+│   │   │               │   ├── resource
+│   │   │               │   │   └── ResourceServiceImpl.java
+│   │   │               │   │
+│   │   │               │   ├── customfield
+│   │   │               │   │   ├── CustomFieldServiceImpl.java
+│   │   │               │   │   └── CustomFieldSearchServiceImpl.java
+│   │   │               │   │
+│   │   │               │   └── log
+│   │   │               │       ├── GrantOperationLogServiceImpl.java
+│   │   │               │       └── DataAccessLogServiceImpl.java
+│   │   │               │
+│   │   │               ├── controller                      # 控制器
+│   │   │               │   ├── AuthController.java
+│   │   │               │   ├── TenantController.java
+│   │   │               │   ├── UserController.java
+│   │   │               │   ├── RoleController.java
+│   │   │               │   ├── PermissionController.java
+│   │   │               │   ├── ResourceController.java
+│   │   │               │   ├── CustomFieldController.java
+│   │   │               │   └── LogController.java
+│   │   │               │
+│   │   │               ├── aspect                          # 切面
+│   │   │               │   ├── DataAccessLogAspect.java    # 数据访问日志切面
+│   │   │               │   ├── PermissionCheckAspect.java  # 权限校验切面
+│   │   │               │   └── TenantAspect.java           # 租户切面
+│   │   │               │
+│   │   │               ├── annotation                      # 自定义注解
+│   │   │               │   ├── RequiresPermission.java     # 权限校验注解
+│   │   │               │   ├── DataScope.java              # 数据权限注解
+│   │   │               │   ├── FieldFilter.java            # 字段过滤注解
+│   │   │               │   └── IgnoreTenant.java           # 忽略租户隔离注解
+│   │   │               │
+│   │   │               └── util                            # 工具类
+│   │   │                   ├── TreeUtil.java               # 树形结构工具
+│   │   │                   ├── MaskUtil.java               # 脱敏工具
+│   │   │                   ├── PasswordUtil.java           # 密码工具
+│   │   │                   └── SqlUtil.java                # SQL工具
+│   │   │
+│   │   └── resources
+│   │       ├── mapper                                      # MyBatis XML映射文件
+│   │       │   ├── TenantMapper.xml
+│   │       │   ├── DepartmentMapper.xml
+│   │       │   ├── UserMapper.xml
+│   │       │   ├── RoleMapper.xml
+│   │       │   ├── PermissionMapper.xml
+│   │       │   ├── DataPermissionRuleMapper.xml
+│   │       │   ├── FieldPermissionRuleMapper.xml
+│   │       │   ├── CustomFieldDefineMapper.xml
+│   │       │   ├── CustomFieldValueMapper.xml
+│   │       │   └── CustomFieldSearchMapper.xml
+│   │       │
+│   │       ├── application.yml                             # 主配置文件
+│   │       ├── application-dev1.yml                        # 开发环境1配置
+│   │       └── application-dev2.yml                        # 开发环境2配置
+│   │
+│   └── test
+│       └── java
+│           └── cn
+│               └── kmdckj
+│                   └── base
+│                       └── BaseApplicationTests.java
+│
+└── pom.xml
