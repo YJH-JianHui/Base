@@ -43,7 +43,7 @@ public class DataPermissionInterceptor implements InnerInterceptor {
             return;
         }
 
-        // 获取用户的数据权限规则（这里简化处理，实际需要查询数据库）
+        // 获取用户的数据权限规则（TODO:这里简化处理，实际需要查询数据库）
         String entityCode = dataScope.entityCode();
         String entityAlias = dataScope.entityAlias();
 

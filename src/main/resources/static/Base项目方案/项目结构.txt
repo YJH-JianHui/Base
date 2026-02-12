@@ -10,9 +10,12 @@ Base
 │   │   │               ├── common                          # 公共模块
 │   │   │               │   ├── constant                    # 常量
 │   │   │               │   │   ├── CacheConstants.java     # 缓存常量
+│   │   │               │   │   ├── CommonConstants.java    # 通用常量
 │   │   │               │   │   ├── DataScopeType.java      # 数据范围类型枚举
 │   │   │               │   │   ├── FieldPermissionType.java # 字段权限类型枚举
+│   │   │               │   │   ├── GrantOperationType.java # 授权操作类型枚举
 │   │   │               │   │   ├── OperationType.java      # 操作类型枚举
+│   │   │               │   │   ├── ResourceType.java       # 资源类型枚举
 │   │   │               │   │   └── RoleLevel.java          # 角色层级常量
 │   │   │               │   │
 │   │   │               │   ├── result                      # 统一响应
@@ -34,7 +37,9 @@ Base
 │   │   │               │   ├── MybatisPlusConfig.java      # MyBatis Plus配置
 │   │   │               │   ├── RedisConfig.java            # Redis配置
 │   │   │               │   ├── WebMvcConfig.java           # Web MVC配置
-│   │   │               │   └── ThreadPoolConfig.java       # 线程池配置
+│   │   │               │   ├── ThreadPoolConfig.java       # 线程池配置
+│   │   │               │   ├── JacksonConfig.java          # Jackson配置
+│   │   │               │   └── MyMetaObjectHandler.java    # MyBatis自动填充处理器
 │   │   │               │
 │   │   │               ├── interceptor                     # 拦截器
 │   │   │               │   ├── TenantInterceptor.java      # 租户拦截器(MyBatis)
@@ -175,39 +180,39 @@ Base
 │   │   │               │   │   ├── CustomFieldService.java
 │   │   │               │   │   └── CustomFieldSearchService.java
 │   │   │               │   │
-│   │   │               │   └── log
-│   │   │               │       ├── GrantOperationLogService.java
-│   │   │               │       └── DataAccessLogService.java
-│   │   │               │
-│   │   │               ├── service.impl                    # 服务实现
-│   │   │               │   ├── auth
-│   │   │               │   │   └── AuthServiceImpl.java
+│   │   │               │   ├── log
+│   │   │               │   │   ├── GrantOperationLogService.java
+│   │   │               │   │   └── DataAccessLogService.java
 │   │   │               │   │
-│   │   │               │   ├── tenant
-│   │   │               │   │   └── TenantServiceImpl.java
-│   │   │               │   │
-│   │   │               │   ├── user
-│   │   │               │   │   └── UserServiceImpl.java
-│   │   │               │   │
-│   │   │               │   ├── role
-│   │   │               │   │   └── RoleServiceImpl.java
-│   │   │               │   │
-│   │   │               │   ├── permission
-│   │   │               │   │   ├── PermissionServiceImpl.java
-│   │   │               │   │   ├── DataPermissionServiceImpl.java
-│   │   │               │   │   ├── FieldPermissionServiceImpl.java
-│   │   │               │   │   └── GrantPermissionServiceImpl.java
-│   │   │               │   │
-│   │   │               │   ├── resource
-│   │   │               │   │   └── ResourceServiceImpl.java
-│   │   │               │   │
-│   │   │               │   ├── customfield
-│   │   │               │   │   ├── CustomFieldServiceImpl.java
-│   │   │               │   │   └── CustomFieldSearchServiceImpl.java
-│   │   │               │   │
-│   │   │               │   └── log
-│   │   │               │       ├── GrantOperationLogServiceImpl.java
-│   │   │               │       └── DataAccessLogServiceImpl.java
+│   │   │               │   └── impl                        # 服务实现
+│   │   │               │       ├── auth
+│   │   │               │       │   └── AuthServiceImpl.java
+│   │   │               │       │
+│   │   │               │       ├── tenant
+│   │   │               │       │   └── TenantServiceImpl.java
+│   │   │               │       │
+│   │   │               │       ├── user
+│   │   │               │       │   └── UserServiceImpl.java
+│   │   │               │       │
+│   │   │               │       ├── role
+│   │   │               │       │   └── RoleServiceImpl.java
+│   │   │               │       │
+│   │   │               │       ├── permission
+│   │   │               │       │   ├── PermissionServiceImpl.java
+│   │   │               │       │   ├── DataPermissionServiceImpl.java
+│   │   │               │       │   ├── FieldPermissionServiceImpl.java
+│   │   │               │       │   └── GrantPermissionServiceImpl.java
+│   │   │               │       │
+│   │   │               │       ├── resource
+│   │   │               │       │   └── ResourceServiceImpl.java
+│   │   │               │       │
+│   │   │               │       ├── customfield
+│   │   │               │       │   ├── CustomFieldServiceImpl.java
+│   │   │               │       │   └── CustomFieldSearchServiceImpl.java
+│   │   │               │       │
+│   │   │               │       └── log
+│   │   │               │           ├── GrantOperationLogServiceImpl.java
+│   │   │               │           └── DataAccessLogServiceImpl.java
 │   │   │               │
 │   │   │               ├── controller                      # 控制器
 │   │   │               │   ├── AuthController.java
@@ -222,36 +227,41 @@ Base
 │   │   │               ├── aspect                          # 切面
 │   │   │               │   ├── DataAccessLogAspect.java    # 数据访问日志切面
 │   │   │               │   ├── PermissionCheckAspect.java  # 权限校验切面
-│   │   │               │   └── TenantAspect.java           # 租户切面
+│   │   │               │   ├── TenantAspect.java           # 租户切面
+│   │   │               │   └── FieldFilterAspect.java      # 字段过滤切面
 │   │   │               │
 │   │   │               ├── annotation                      # 自定义注解
 │   │   │               │   ├── RequiresPermission.java     # 权限校验注解
 │   │   │               │   ├── DataScope.java              # 数据权限注解
 │   │   │               │   ├── FieldFilter.java            # 字段过滤注解
-│   │   │               │   └── IgnoreTenant.java           # 忽略租户隔离注解
+│   │   │               │   ├── IgnoreTenant.java           # 忽略租户隔离注解
+│   │   │               │   └── Log.java                    # 日志注解
 │   │   │               │
 │   │   │               └── util                            # 工具类
 │   │   │                   ├── TreeUtil.java               # 树形结构工具
 │   │   │                   ├── MaskUtil.java               # 脱敏工具
 │   │   │                   ├── PasswordUtil.java           # 密码工具
-│   │   │                   └── SqlUtil.java                # SQL工具
+│   │   │                   ├── SqlUtil.java                # SQL工具
+│   │   │                   └── TokenUtil.java              # Token工具
 │   │   │
 │   │   └── resources
-│   │       ├── mapper                                      # MyBatis XML映射文件
-│   │       │   ├── TenantMapper.xml
-│   │       │   ├── DepartmentMapper.xml
-│   │       │   ├── UserMapper.xml
-│   │       │   ├── RoleMapper.xml
-│   │       │   ├── PermissionMapper.xml
-│   │       │   ├── DataPermissionRuleMapper.xml
-│   │       │   ├── FieldPermissionRuleMapper.xml
-│   │       │   ├── CustomFieldDefineMapper.xml
-│   │       │   ├── CustomFieldValueMapper.xml
-│   │       │   └── CustomFieldSearchMapper.xml
+│   │       ├── mapper                                      # MyBatis XML映射文件(空)
+│   │       │
+│   │       ├── static                                      # 静态资源
+│   │       │   └── Base项目方案
+│   │       │       ├── ER图.svg
+│   │       │       ├── 建表语句.sql
+│   │       │       ├── 方案.md
+│   │       │       ├── 方案_扩展版.md
+│   │       │       ├── 模拟数据.sql
+│   │       │       └── 项目结构.txt
+│   │       │
+│   │       ├── templates                                   # 模板文件(空)
 │   │       │
 │   │       ├── application.yml                             # 主配置文件
 │   │       ├── application-dev1.yml                        # 开发环境1配置
-│   │       └── application-dev2.yml                        # 开发环境2配置
+│   │       ├── application-dev2.yml                        # 开发环境2配置
+│   │       └── application-prod.yml                        # 生产环境配置
 │   │
 │   └── test
 │       └── java
@@ -260,4 +270,13 @@ Base
 │                   └── base
 │                       └── BaseApplicationTests.java
 │
-└── pom.xml
+├── target                                                  # 编译输出目录
+├── logs                                                    # 日志文件目录
+├── .mvn                                                    # Maven Wrapper配置
+├── .idea                                                   # IDEA配置目录
+├── .git                                                    # Git版本控制
+├── .gitignore                                              # Git忽略配置
+├── .gitattributes                                          # Git属性配置
+├── mvnw                                                    # Maven Wrapper脚本(Unix)
+├── mvnw.cmd                                                # Maven Wrapper脚本(Windows)
+└── pom.xml                                                 # Maven项目配置文件

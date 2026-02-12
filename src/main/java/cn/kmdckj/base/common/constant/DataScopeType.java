@@ -1,8 +1,11 @@
 package cn.kmdckj.base.common.constant;
 
+import lombok.Getter;
+
 /**
  * 数据权限范围类型枚举。
  */
+@Getter
 public enum DataScopeType {
     /**
      * 本租户全部数据
@@ -37,11 +40,4 @@ public enum DataScopeType {
         this.description = description;
     }
 
-    public String getCode() {
-        return code;
-    }
-
-    public String getDescription() {
-        return description;
-    }
 }
