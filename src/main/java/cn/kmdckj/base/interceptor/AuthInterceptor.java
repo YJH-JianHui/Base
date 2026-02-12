@@ -5,7 +5,7 @@ import cn.kmdckj.base.common.context.SecurityContext;
 import cn.kmdckj.base.common.context.TenantContext;
 import cn.kmdckj.base.common.result.Result;
 import cn.kmdckj.base.common.result.ResultCode;
-import cn.kmdckj.base.service.cache.CacheService;
+import cn.kmdckj.base.util.CacheUtil;
 import cn.kmdckj.base.util.TokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,7 +35,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     private static final String TOKEN_PREFIX = "Bearer ";
 
     @Autowired
-    private CacheService cacheService;
+    private CacheUtil cacheUtil;
 
     /**
      * 前置处理
@@ -81,7 +81,7 @@ public class AuthInterceptor implements HandlerInterceptor {
         // 校验缓存中的Token是否有效（处理登出失效）
         try {
             // 使用 CacheService 从缓存获取Token
-            String cachedToken = cacheService.get(
+            String cachedToken = cacheUtil.get(
                     CacheConstants.CACHE_LOGIN_TOKEN,
                     userId.toString(),
                     String.class

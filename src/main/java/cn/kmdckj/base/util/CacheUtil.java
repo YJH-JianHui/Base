@@ -1,4 +1,4 @@
-package cn.kmdckj.base.service.cache;
+package cn.kmdckj.base.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,12 +9,12 @@ import org.springframework.stereotype.Service;
 import java.util.Collection;
 
 /**
- * 缓存服务
+ * 缓存工具类
  * 提供编程式缓存操作（用于Spring Cache注解无法覆盖的场景）
  */
 @Slf4j
 @Service
-public class CacheService {
+public class CacheUtil {
 
     @Autowired
     private CacheManager cacheManager;

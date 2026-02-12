@@ -9,7 +9,7 @@ import cn.kmdckj.base.dto.auth.UserInfoDTO;
 import cn.kmdckj.base.entity.User;
 import cn.kmdckj.base.mapper.UserMapper;
 import cn.kmdckj.base.service.auth.AuthService;
-import cn.kmdckj.base.service.cache.CacheService;
+import cn.kmdckj.base.util.CacheUtil;
 import cn.kmdckj.base.util.PasswordUtil;
 import cn.kmdckj.base.util.TokenUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class AuthServiceImpl implements AuthService {
     private UserMapper userMapper;
 
     @Autowired
-    private CacheService cacheService;
+    private CacheUtil cacheUtil;
 
     /**
      * 用户登录
@@ -70,7 +70,7 @@ public class AuthServiceImpl implements AuthService {
         );
 
         // 6. 将Token存入缓存（使用CacheService）
-        cacheService.put(
+        cacheUtil.put(
                 CacheConstants.CACHE_LOGIN_TOKEN,
                 user.getId().toString(),
                 token
@@ -104,7 +104,7 @@ public class AuthServiceImpl implements AuthService {
     public boolean logout(Long userId) {
         try {
             // 清除Token缓存（使用CacheService）
-            cacheService.evict(CacheConstants.CACHE_LOGIN_TOKEN, userId.toString());
+            cacheUtil.evict(CacheConstants.CACHE_LOGIN_TOKEN, userId.toString());
 
             // 其他缓存通过 @Caching 注解自动清除
 
@@ -250,7 +250,7 @@ public class AuthServiceImpl implements AuthService {
     public void clearUserCache(Long userId) {
         log.info("清除用户缓存，userId: {}", userId);
         // 同时清除Token缓存
-        cacheService.evict(CacheConstants.CACHE_LOGIN_TOKEN, userId.toString());
+        cacheUtil.evict(CacheConstants.CACHE_LOGIN_TOKEN, userId.toString());
     }
 
     /**
