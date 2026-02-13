@@ -5,7 +5,6 @@ import cn.kmdckj.base.common.result.ResultCode;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
@@ -30,9 +29,7 @@ public class GlobalExceptionHandler {
 
     /**
      * 业务异常
-     * Order优先级最高，优先处理
      */
-    @Order(1)
     @ExceptionHandler(BusinessException.class)
     @ResponseStatus(HttpStatus.OK)  // 业务异常返回200，通过code区分
     public Result<?> handleBusinessException(BusinessException e) {
@@ -43,7 +40,6 @@ public class GlobalExceptionHandler {
     /**
      * 权限异常
      */
-    @Order(2)
     @ExceptionHandler(PermissionException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)  // 403
     public Result<?> handlePermissionException(PermissionException e) {
@@ -54,7 +50,6 @@ public class GlobalExceptionHandler {
     /**
      * 参数校验异常 - @Valid 注解校验失败
      */
-    @Order(3)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)  // 400
     public Result<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
@@ -68,7 +63,6 @@ public class GlobalExceptionHandler {
     /**
      * 参数绑定异常
      */
-    @Order(4)
     @ExceptionHandler(BindException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<?> handleBindException(BindException e) {
@@ -82,7 +76,6 @@ public class GlobalExceptionHandler {
     /**
      * 约束违反异常 - @Validated 注解校验失败
      */
-    @Order(5)
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<?> handleConstraintViolationException(ConstraintViolationException e) {
@@ -97,7 +90,6 @@ public class GlobalExceptionHandler {
     /**
      * 非法参数异常
      */
-    @Order(6)
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<?> handleIllegalArgumentException(IllegalArgumentException e) {
@@ -108,7 +100,6 @@ public class GlobalExceptionHandler {
     /**
      * 空指针异常
      */
-    @Order(7)
     @ExceptionHandler(NullPointerException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)  // 500
     public Result<?> handleNullPointerException(NullPointerException e) {
@@ -120,7 +111,6 @@ public class GlobalExceptionHandler {
     /**
      * 不支持的请求方法异常
      */
-    @Order(8)
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED) // 405
     public Result<?> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
@@ -129,9 +119,72 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * 静态资源不存在异常 (404)
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Result<?> handleNoResourceFoundException(NoResourceFoundException e) {
+        log.warn("资源不存在: {}", e.getResourcePath());
+        return Result.error(ResultCode.REQUEST_PATH_NOT_EXIST, "资源不存在: " + e.getResourcePath());
+    }
+
+    /**
+     * Redis相关异常
+     */
+    @ExceptionHandler({
+            org.springframework.data.redis.connection.PoolException.class,
+            org.springframework.data.redis.RedisConnectionFailureException.class,
+            org.springframework.data.redis.RedisSystemException.class
+    })
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Result<?> handleRedisException(RuntimeException e) {
+        log.error("Redis服务异常", e);
+        return Result.error(ResultCode.CACHE_SERVICE_ERROR, "缓存服务异常");
+    }
+
+    /**
+     * MyBatis系统异常
+     */
+    @ExceptionHandler(org.mybatis.spring.MyBatisSystemException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Result<?> handleMyBatisSystemException(org.mybatis.spring.MyBatisSystemException e) {
+        log.error("MyBatis系统异常", e);
+        Throwable cause = e.getCause();
+        if (cause instanceof org.apache.ibatis.exceptions.PersistenceException) {
+            Throwable secondCause = cause.getCause();
+            if (secondCause instanceof java.sql.SQLTimeoutException) {
+                 return Result.error(ResultCode.DATABASE_SERVICE_TIMEOUT);
+            }
+        }
+        return Result.error(ResultCode.DATABASE_SERVICE_ERROR);
+    }
+
+    /**
+     * 数据库唯一键冲突异常
+     */
+    @ExceptionHandler(org.springframework.dao.DuplicateKeyException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public Result<?> handleDuplicateKeyException(org.springframework.dao.DuplicateKeyException e) {
+        log.warn("数据重复: {}", e.getMessage());
+        return Result.error(ResultCode.DATABASE_PRIMARY_KEY_CONFLICT, "数据已存在，请勿重复操作");
+    }
+
+    /**
+     * 数据库操作异常
+     */
+    @ExceptionHandler(org.springframework.dao.DataAccessException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Result<?> handleDataAccessException(org.springframework.dao.DataAccessException e) {
+        log.error("数据库操作异常", e);
+        if (e.getCause() instanceof java.sql.SQLTimeoutException) {
+            return Result.error(ResultCode.DATABASE_SERVICE_TIMEOUT);
+        }
+        return Result.error(ResultCode.DATABASE_SERVICE_ERROR);
+    }
+
+    /**
      * 运行时异常
      */
-    @Order(9)
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<?> handleRuntimeException(RuntimeException e) {
@@ -142,21 +195,9 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 静态资源不存在异常 (404)
-     */
-    @Order(10)
-    @ExceptionHandler(NoResourceFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Result<?> handleNoResourceFoundException(NoResourceFoundException e) {
-        log.warn("资源不存在: {}", e.getResourcePath());
-        return Result.error(ResultCode.REQUEST_PATH_NOT_EXIST, "资源不存在: " + e.getResourcePath());
-    }
-
-    /**
      * 其他未捕获的异常
      * 最后执行，兜底处理
      */
-    @Order(999)
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<?> handleException(Exception e) {
