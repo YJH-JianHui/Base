@@ -11,8 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * 认证鉴权控制器。
- * 处理登录、获取用户信息等请求。
+ * 认证鉴权控制器
  */
 @Slf4j
 @RestController
@@ -27,14 +26,10 @@ public class AuthController {
      */
     @PostMapping("/login")
     public Result<UserInfoDTO> login(@Valid @RequestBody LoginDTO loginDTO) {
-        try {
-            UserInfoDTO userInfo = authService.login(loginDTO);
-            log.info("用户登录成功，username: {}", loginDTO.getUsername());
-            return Result.success("登录成功", userInfo);
-        } catch (Exception e) {
-            log.error("用户登录失败，username: {}, error: {}", loginDTO.getUsername(), e.getMessage());
-            return Result.error(e.getMessage());
-        }
+        log.info("用户登录请求，username: {}", loginDTO.getUsername());
+        UserInfoDTO userInfo = authService.login(loginDTO);
+        log.info("用户登录成功，username: {}, userId: {}", loginDTO.getUsername(), userInfo.getUserId());
+        return Result.success("登录成功", userInfo);
     }
 
     /**
@@ -42,23 +37,24 @@ public class AuthController {
      */
     @PostMapping("/logout")
     public Result<Void> logout(HttpServletRequest request) {
-        try {
-            // 获取Token
-            String token = request.getHeader("Authorization");
-            if (token != null && token.startsWith("Bearer ")) {
-                token = token.substring(7);
-            }
+        log.info("用户登出请求");
 
-            boolean success = authService.logout(token);
-            if (success) {
-                log.info("用户登出成功");
-                return Result.success("登出成功");
-            } else {
-                return Result.error("登出失败");
-            }
-        } catch (Exception e) {
-            log.error("用户登出失败，error: {}", e.getMessage());
-            return Result.error(e.getMessage());
+        // 获取Token
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+
+        // 直接调用Service
+        boolean success = authService.logout(token);
+
+        if (success) {
+            log.info("用户登出成功");
+            return Result.success("登出成功");
+        } else {
+            // 登出失败也可以抛异常，让全局异常处理器处理
+            log.warn("用户登出失败");
+            return Result.error("登出失败");
         }
     }
 
@@ -67,12 +63,8 @@ public class AuthController {
      */
     @GetMapping("/userInfo")
     public Result<UserInfoDTO> getUserInfo() {
-        try {
-            UserInfoDTO userInfo = authService.getCurrentUserInfo();
-            return Result.success(userInfo);
-        } catch (Exception e) {
-            log.error("获取用户信息失败，error: {}", e.getMessage());
-            return Result.error(e.getMessage());
-        }
+        log.debug("获取当前用户信息请求");
+        UserInfoDTO userInfo = authService.getCurrentUserInfo();
+        return Result.success(userInfo);
     }
 }

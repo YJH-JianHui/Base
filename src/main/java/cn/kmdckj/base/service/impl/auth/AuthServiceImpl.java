@@ -1,5 +1,6 @@
 package cn.kmdckj.base.service.impl.auth;
 
+import cn.kmdckj.base.annotation.IgnoreTenant;
 import cn.kmdckj.base.common.constant.CacheConstants;
 import cn.kmdckj.base.common.context.SecurityContext;
 import cn.kmdckj.base.common.exception.BusinessException;
@@ -9,22 +10,20 @@ import cn.kmdckj.base.dto.auth.UserInfoDTO;
 import cn.kmdckj.base.entity.User;
 import cn.kmdckj.base.mapper.UserMapper;
 import cn.kmdckj.base.service.auth.AuthService;
+import cn.kmdckj.base.service.permission.PermissionService;
+import cn.kmdckj.base.service.role.RoleService;
 import cn.kmdckj.base.util.CacheUtil;
 import cn.kmdckj.base.util.PasswordUtil;
 import cn.kmdckj.base.util.TokenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 /**
  * 认证授权服务实现类
- * 使用 Spring Cache 注解 + CacheService
  */
 @Slf4j
 @Service
@@ -34,11 +33,18 @@ public class AuthServiceImpl implements AuthService {
     private UserMapper userMapper;
 
     @Autowired
+    private PermissionService permissionService;
+
+    @Autowired
+    private RoleService roleService;
+
+    @Autowired
     private CacheUtil cacheUtil;
 
     /**
      * 用户登录
      */
+    @IgnoreTenant
     @Override
     public UserInfoDTO login(LoginDTO loginDTO) {
         // 1. 根据用户名查询用户
@@ -57,9 +63,9 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ResultCode.USER_ACCOUNT_FROZEN);
         }
 
-        // 4. 查询用户权限和角色（这里会自动缓存）
-        List<String> permissions = getUserPermissions(user.getId());
-        List<String> roles = getUserRoles(user.getId());
+        // 4. 查询用户权限和角色（自动缓存）
+        List<String> permissions = permissionService.getUserPermissions(user.getId());
+        List<String> roles = roleService.getUserRoles(user.getId());
 
         // 5. 生成JWT Token
         String token = TokenUtil.generateToken(
@@ -69,7 +75,7 @@ public class AuthServiceImpl implements AuthService {
                 user.getDeptId()
         );
 
-        // 6. 将Token存入缓存（使用CacheService）
+        // 6. 将Token存入缓存
         cacheUtil.put(
                 CacheConstants.CACHE_LOGIN_TOKEN,
                 user.getId().toString(),
@@ -93,58 +99,39 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * 用户登出（根据userId）
-     * 清除所有相关缓存
-     */
-    @Caching(evict = {
-            @CacheEvict(value = CacheConstants.CACHE_USER_PERMISSION, key = "#userId"),
-            @CacheEvict(value = CacheConstants.CACHE_USER_ROLE, key = "#userId"),
-            @CacheEvict(value = CacheConstants.CACHE_USER_INFO, key = "#userId")
-    })
-    public boolean logout(Long userId) {
-        try {
-            // 清除Token缓存（使用CacheService）
-            cacheUtil.evict(CacheConstants.CACHE_LOGIN_TOKEN, userId.toString());
-
-            // 其他缓存通过 @Caching 注解自动清除
-
-            log.info("用户登出成功，userId: {}", userId);
-            return true;
-        } catch (Exception e) {
-            log.error("用户登出失败，userId: {}", userId, e);
-            return false;
-        }
-    }
-
-    /**
-     * 用户登出（根据Token）
+     * 用户登出（根据Token） 只能手动清理缓存
      */
     @Override
     public boolean logout(String token) {
-        try {
-            // 去除 Bearer 前缀（如果有）
-            if (token.startsWith("Bearer ")) {
-                token = token.substring(7);
-            }
-
-            // 从Token中获取用户ID
-            Long userId = TokenUtil.getUserId(token);
-            if (userId == null) {
-                log.warn("Token中无法解析用户ID");
-                return false;
-            }
-
-            // 调用基于userId的登出方法
-            return logout(userId);
-        } catch (Exception e) {
-            log.error("用户登出失败", e);
-            return false;
+        // 去除 Bearer 前缀
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
         }
+
+        // 验证Token并获取用户ID
+        if (!TokenUtil.validateToken(token)) {
+            throw new BusinessException(ResultCode.USER_LOGIN_EXPIRED, "Token无效或已过期");
+        }
+
+        Long userId = TokenUtil.getUserId(token);
+        if (userId == null) {
+            throw new BusinessException(ResultCode.USER_LOGIN_EXPIRED, "Token信息不完整");
+        }
+
+        // 1. 清除Token缓存
+        cacheUtil.evict(CacheConstants.CACHE_LOGIN_TOKEN, userId.toString());
+        // 2. 清除用户权限缓存
+        cacheUtil.evict(CacheConstants.CACHE_USER_PERMISSION, userId.toString());
+        // 3. 清除用户角色缓存
+        cacheUtil.evict(CacheConstants.CACHE_USER_ROLE, userId.toString());
+        // 4. 清除用户信息缓存
+        cacheUtil.evict(CacheConstants.CACHE_USER_INFO, userId.toString());
+
+        return true;
     }
 
     /**
      * 获取当前登录用户信息
-     * 自动缓存用户信息
      */
     @Override
     @Cacheable(
@@ -172,8 +159,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 查询用户权限和角色（自动走缓存）
-        List<String> permissions = getUserPermissions(userId);
-        List<String> roles = getUserRoles(userId);
+        List<String> permissions = permissionService.getUserPermissions(userId);
+        List<String> roles = roleService.getUserRoles(userId);
 
         // 构建返回结果
         return UserInfoDTO.builder()
@@ -185,72 +172,6 @@ public class AuthServiceImpl implements AuthService {
                 .permissions(permissions)
                 .roles(roles)
                 .build();
-    }
-
-    /**
-     * 获取用户权限列表
-     * 自动缓存到 userPermission 空间
-     */
-    @Cacheable(
-            value = CacheConstants.CACHE_USER_PERMISSION,
-            key = "#userId",
-            unless = "#result == null || #result.isEmpty()"
-    )
-    public List<String> getUserPermissions(Long userId) {
-        log.info("从数据库查询用户权限，userId: {}", userId);
-        return userMapper.selectUserPermissions(userId);
-    }
-
-    /**
-     * 获取用户角色列表
-     * 自动缓存到 userRole 空间
-     */
-    @Cacheable(
-            value = CacheConstants.CACHE_USER_ROLE,
-            key = "#userId",
-            unless = "#result == null || #result.isEmpty()"
-    )
-    public List<String> getUserRoles(Long userId) {
-        log.info("从数据库查询用户角色，userId: {}", userId);
-        return userMapper.selectUserRoles(userId);
-    }
-
-    /**
-     * 刷新用户权限缓存
-     */
-    @CachePut(
-            value = CacheConstants.CACHE_USER_PERMISSION,
-            key = "#userId"
-    )
-    public List<String> refreshUserPermissions(Long userId) {
-        log.info("刷新用户权限缓存，userId: {}", userId);
-        return userMapper.selectUserPermissions(userId);
-    }
-
-    /**
-     * 刷新用户角色缓存
-     */
-    @CachePut(
-            value = CacheConstants.CACHE_USER_ROLE,
-            key = "#userId"
-    )
-    public List<String> refreshUserRoles(Long userId) {
-        log.info("刷新用户角色缓存，userId: {}", userId);
-        return userMapper.selectUserRoles(userId);
-    }
-
-    /**
-     * 清除用户所有缓存
-     */
-    @Caching(evict = {
-            @CacheEvict(value = CacheConstants.CACHE_USER_PERMISSION, key = "#userId"),
-            @CacheEvict(value = CacheConstants.CACHE_USER_ROLE, key = "#userId"),
-            @CacheEvict(value = CacheConstants.CACHE_USER_INFO, key = "#userId")
-    })
-    public void clearUserCache(Long userId) {
-        log.info("清除用户缓存，userId: {}", userId);
-        // 同时清除Token缓存
-        cacheUtil.evict(CacheConstants.CACHE_LOGIN_TOKEN, userId.toString());
     }
 
     /**

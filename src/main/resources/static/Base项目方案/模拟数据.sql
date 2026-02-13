@@ -47,8 +47,8 @@ INSERT INTO `user` (`id`, `tenant_id`, `dept_id`, `username`, `password`, `real_
 -- 4. 角色表数据
 INSERT INTO `role` (`id`, `tenant_id`, `role_code`, `role_name`, `role_type`, `level`, `parent_role_id`, `is_tenant_admin`, `manageable`, `description`, `status`) VALUES
 -- 平台角色
-(1, NULL, 'PLATFORM_SUPER_ADMIN', '平台超级管理员', 'platform', 0, NULL, 0, 0, '平台最高权限,可跨租户管理', 1),
-(2, NULL, 'PLATFORM_OPERATOR', '平台运营管理员', 'platform', 10, 1, 0, 1, '平台运营人员,可跨租户查看', 1),
+(1, 1, 'PLATFORM_SUPER_ADMIN', '平台超级管理员', 'platform', 0, NULL, 0, 0, '平台最高权限,可跨租户管理', 1),
+(2, 1, 'PLATFORM_OPERATOR', '平台运营管理员', 'platform', 10, 1, 0, 1, '平台运营人员,可跨租户查看', 1),
 -- 租户2角色
 (3, 2, 'TENANT_A_ADMIN', '租户管理员', 'tenant', 100, NULL, 1, 0, 'A公司超级管理员', 1),
 (4, 2, 'TENANT_A_TECH_MANAGER', '技术部经理', 'tenant', 200, 3, 0, 1, '技术部门管理角色', 1),
