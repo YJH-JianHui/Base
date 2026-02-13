@@ -118,6 +118,12 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ResultCode.USER_LOGIN_EXPIRED, "Token信息不完整");
         }
 
+        // 验证Redis中是否存在Token（防止重复登出）
+        String cachedToken = cacheUtil.get(CacheConstants.CACHE_LOGIN_TOKEN, userId.toString(), String.class);
+        if (cachedToken == null || !cachedToken.equals(token)) {
+            throw new BusinessException(ResultCode.USER_LOGIN_EXPIRED, "用户已登出或Token已失效");
+        }
+
         // 1. 清除Token缓存
         cacheUtil.evict(CacheConstants.CACHE_LOGIN_TOKEN, userId.toString());
         // 2. 清除用户权限缓存
