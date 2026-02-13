@@ -39,10 +39,10 @@ Base
 │   │   │               │   ├── WebMvcConfig.java           # Web MVC配置
 │   │   │               │   ├── ThreadPoolConfig.java       # 线程池配置
 │   │   │               │   ├── JacksonConfig.java          # Jackson配置
-│   │   │               │   └── MyMetaObjectHandler.java    # MyBatis自动填充处理器
+│   │   │               │   ├── MyMetaObjectHandler.java    # MyBatis自动填充处理器
+│   │   │               │   └── TenantLineHandler.java      # 租户处理器(MyBatis Plus)
 │   │   │               │
 │   │   │               ├── interceptor                     # 拦截器
-│   │   │               │   ├── TenantInterceptor.java      # 租户拦截器(MyBatis)
 │   │   │               │   ├── DataPermissionInterceptor.java # 数据权限拦截器
 │   │   │               │   └── AuthInterceptor.java        # 认证拦截器(Web)
 │   │   │               │
