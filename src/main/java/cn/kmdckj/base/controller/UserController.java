@@ -1,5 +1,6 @@
 package cn.kmdckj.base.controller;
 
+import cn.kmdckj.base.annotation.FieldFilter;
 import cn.kmdckj.base.annotation.RequiresPermission;
 import cn.kmdckj.base.common.result.Result;
 import cn.kmdckj.base.entity.User;
@@ -25,6 +26,7 @@ public class UserController {
 
     @GetMapping("/list")
     @RequiresPermission("system:user:view")
+    @FieldFilter(entityCode = "user")
     public Result<List<User>> list() {
         List<User> users = userMapper.selectWithDataScope();
         return Result.success(users);

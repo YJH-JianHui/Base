@@ -1,23 +1,23 @@
 package cn.kmdckj.base.aspect;
 
 import cn.kmdckj.base.annotation.FieldFilter;
-import cn.kmdckj.base.common.constant.FieldPermissionType;
 import cn.kmdckj.base.common.context.SecurityContext;
 import cn.kmdckj.base.common.result.PageResult;
 import cn.kmdckj.base.common.result.Result;
+import cn.kmdckj.base.service.permission.FieldPermissionService;
+import cn.kmdckj.base.service.permission.FieldPermissionService.FieldPermissionInfo;
 import cn.kmdckj.base.util.MaskUtil;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +29,9 @@ import java.util.Map;
 @Aspect
 @Component
 public class FieldFilterAspect {
+
+    @Autowired
+    private FieldPermissionService fieldPermissionService;
 
     /**
      * 环绕通知：字段权限过滤
@@ -231,27 +234,6 @@ public class FieldFilterAspect {
      * 获取用户的字段权限
      */
     private Map<String, FieldPermissionInfo> getUserFieldPermissions(Long userId, String entityCode) {
-        // TODO: 从缓存或数据库查询用户的字段权限
-        // 1. 查询用户的所有角色
-        // 2. 查询角色关联的字段权限规则
-        // 3. 合并权限（取最高权限）
-
-        // 临时返回空Map（后续实现service层后替换）
-        return new HashMap<>();
-    }
-
-    /**
-     * 字段权限信息内部类
-     */
-    @Getter
-    private static class FieldPermissionInfo {
-        private final FieldPermissionType permissionType;
-        private final String maskRule;
-
-        public FieldPermissionInfo(FieldPermissionType permissionType, String maskRule) {
-            this.permissionType = permissionType;
-            this.maskRule = maskRule;
-        }
-
+        return fieldPermissionService.getUserFieldPermissions(userId, entityCode);
     }
 }

@@ -139,7 +139,15 @@ public class MaskUtil {
         String type = parts[0];
         String rule = parts[1];
 
-        // 特殊类型直接处理
+        // 如果有自定义数字规则，优先使用，不走预设类型
+        if (rule.contains(",")) {
+            String[] nums = rule.split(",");
+            int prefix = Integer.parseInt(nums[0]);
+            int suffix = Integer.parseInt(nums[1]);
+            return mask(value, prefix, suffix);
+        }
+
+        // 没有自定义数字规则，走预设类型
         switch (type.toLowerCase()) {
             case "phone":
                 return maskPhone(value);
@@ -154,14 +162,7 @@ public class MaskUtil {
             case "address":
                 return maskAddress(value);
             default:
-                // 通用规则：prefix,suffix
-                if (rule.contains(",")) {
-                    String[] nums = rule.split(",");
-                    int prefix = Integer.parseInt(nums[0]);
-                    int suffix = Integer.parseInt(nums[1]);
-                    return mask(value, prefix, suffix);
-                } else if ("*".equals(rule)) {
-                    // 全部脱敏
+                if ("*".equals(rule)) {
                     return StrUtil.repeat(MASK_CHAR, value.length());
                 }
                 return value;
