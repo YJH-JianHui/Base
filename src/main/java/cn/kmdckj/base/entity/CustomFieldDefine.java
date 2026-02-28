@@ -47,7 +47,7 @@ public class CustomFieldDefine extends TenantEntity {
      * 字段配置
      */
     @TableField(typeHandler = JacksonTypeHandler.class)
-    private String fieldConfig;
+    private Object fieldConfig;
 
     /**
      * 敏感级别:0-普通 1-敏感 2-高度敏感
