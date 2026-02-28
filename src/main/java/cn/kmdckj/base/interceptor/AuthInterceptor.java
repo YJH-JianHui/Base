@@ -5,6 +5,7 @@ import cn.kmdckj.base.common.context.SecurityContext;
 import cn.kmdckj.base.common.context.TenantContext;
 import cn.kmdckj.base.common.result.Result;
 import cn.kmdckj.base.common.result.ResultCode;
+import cn.kmdckj.base.service.role.RoleService;
 import cn.kmdckj.base.util.CacheUtil;
 import cn.kmdckj.base.util.TokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.List;
 
 /**
  * 认证拦截器
@@ -36,6 +39,9 @@ public class AuthInterceptor implements HandlerInterceptor {
 
     @Autowired
     private CacheUtil cacheUtil;
+
+    @Autowired
+    private RoleService roleService;
 
     /**
      * 前置处理
@@ -101,11 +107,14 @@ public class AuthInterceptor implements HandlerInterceptor {
             sendUnauthorizedResponse(response, "系统繁忙，请稍后重试");
             return false;
         }
+        List<String> roles = roleService.getUserRoles(userId); // 从缓存取，PermissionService 已有
+        boolean isSuperAdmin = roles.contains("PLATFORM_SUPER_ADMIN");
 
         // 设置上下文
         SecurityContext.setUserId(userId);
         SecurityContext.setUsername(username);
         SecurityContext.setDeptId(deptId);
+        SecurityContext.setSuperAdmin(isSuperAdmin);
 
         if (tenantId != null) {
             TenantContext.setTenantId(tenantId);

@@ -38,6 +38,11 @@ public class FieldFilterAspect {
         // 执行方法
         Object result = joinPoint.proceed();
 
+        // 超管跳过字段过滤
+        if (SecurityContext.isSuperAdmin()) {
+            return result;
+        }
+
         // 获取方法签名
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();

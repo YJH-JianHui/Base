@@ -24,10 +24,29 @@ public class SecurityContext {
     private static final ThreadLocal<Long> DEPT_ID = new TransmittableThreadLocal<>();
 
     /**
+     * 平台超管变量
+     */
+    private static final ThreadLocal<Boolean> IS_SUPER_ADMIN = new TransmittableThreadLocal<>();
+
+    /**
      * 获取用户ID
      */
     public static Long getUserId() {
         return USER_ID.get();
+    }
+
+    /**
+     * 获取超管
+     */
+    public static Boolean isSuperAdmin() {
+        return Boolean.TRUE.equals(IS_SUPER_ADMIN.get());
+    }
+
+    /**
+     * 设置超管
+     */
+    public static void setSuperAdmin(Boolean isSuperAdmin) {
+        IS_SUPER_ADMIN.set(isSuperAdmin);
     }
 
     /**
@@ -72,5 +91,6 @@ public class SecurityContext {
         USER_ID.remove();
         USERNAME.remove();
         DEPT_ID.remove();
+        IS_SUPER_ADMIN.remove();
     }
 }

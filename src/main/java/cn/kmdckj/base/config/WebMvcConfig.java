@@ -31,7 +31,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     }
 
     /**
-     * 注册拦截器
+     * 注册拦截器（排除不需要进行token认证的接口）
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {

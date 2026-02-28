@@ -3,15 +3,25 @@ package cn.kmdckj.base.interceptor;
 import cn.kmdckj.base.annotation.DataScope;
 import cn.kmdckj.base.common.constant.DataScopeType;
 import cn.kmdckj.base.common.context.SecurityContext;
+import cn.kmdckj.base.service.permission.DataPermissionService;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.sql.SQLException;
 import java.util.List;
@@ -24,6 +34,10 @@ import java.util.List;
 @Component
 public class DataPermissionInterceptor implements InnerInterceptor {
 
+    @Autowired
+    @Lazy
+    private DataPermissionService dataPermissionService;
+
     @Override
     public void beforeQuery(Executor executor, MappedStatement ms, Object parameter,
                             RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql)
@@ -35,6 +49,12 @@ public class DataPermissionInterceptor implements InnerInterceptor {
             return;
         }
 
+        // 超管跳过数据权限过滤
+        if (SecurityContext.isSuperAdmin()) {
+            log.debug("超管用户，跳过数据权限过滤");
+            return;
+        }
+
         // 获取当前用户信息
         Long userId = SecurityContext.getUserId();
         Long deptId = SecurityContext.getDeptId();
@@ -43,18 +63,45 @@ public class DataPermissionInterceptor implements InnerInterceptor {
             return;
         }
 
-        // 获取用户的数据权限规则（TODO:这里简化处理，实际需要查询数据库）
-        String entityCode = dataScope.entityCode();
-        String entityAlias = dataScope.entityAlias();
+        // 查询该用户对该实体的数据权限规则
+        String condition = dataPermissionService.buildDataScopeCondition(
+                userId, deptId, dataScope.entityCode(), dataScope.entityAlias()
+        );
 
-        log.debug("数据权限拦截器生效，entityCode: {}, userId: {}, deptId: {}",
-                entityCode, userId, deptId);
+        if (condition == null || condition.isEmpty()) {
+            return;
+        }
 
-        // TODO:这里简化处理，实际实现需要：
-        // 1. 根据 userId 查询用户的角色
-        // 2. 根据角色查询 data_permission_rule 表，获取数据权限规则
-        // 3. 根据 data_scope_type 构建不同的SQL条件
-        // 4. 使用 JSQLParser 解析SQL并添加条件
+        // 用 JSQLParser 把条件拼到原始 SQL 的 WHERE 中
+        try {
+            String originalSql = boundSql.getSql();
+            String newSql = injectCondition(originalSql, condition);
+            // 反射替换 BoundSql 中的 sql 字段
+            Field sqlField = BoundSql.class.getDeclaredField("sql");
+            sqlField.setAccessible(true);
+            sqlField.set(boundSql, newSql);
+            log.debug("数据权限注入SQL条件: {}", condition);
+        } catch (Exception e) {
+            log.error("数据权限SQL注入失败", e);
+        }
+    }
+
+    /**
+     * 将条件注入到 SQL 的 WHERE 子句
+     */
+    private String injectCondition(String originalSql, String condition) throws JSQLParserException {
+        Select select = (Select) CCJSqlParserUtil.parse(originalSql);
+        PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
+
+        Expression where = plainSelect.getWhere();
+        Expression newCondition = CCJSqlParserUtil.parseCondExpression(condition);
+
+        if (where == null) {
+            plainSelect.setWhere(newCondition);
+        } else {
+            plainSelect.setWhere(new AndExpression(where, newCondition));
+        }
+        return select.toString();
     }
 
     /**

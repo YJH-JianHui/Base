@@ -1,5 +1,6 @@
 package cn.kmdckj.base.config;
 
+import cn.kmdckj.base.common.context.SecurityContext;
 import cn.kmdckj.base.common.context.TenantContext;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
@@ -29,6 +30,7 @@ public class TenantLineHandler implements com.baomidou.mybatisplus.extension.plu
             "user_role",
             "operation",
             "permission",
+            "resource",
             "role_permission",
             "data_permission_rule",
             "field_resource",
@@ -76,6 +78,11 @@ public class TenantLineHandler implements com.baomidou.mybatisplus.extension.plu
         // 1. 如果设置了全局忽略租户隔离标识，则忽略
         if (TenantContext.isIgnoreTenant()) {
             log.debug("全局忽略租户隔离，表: {}", tableName);
+            return true;
+        }
+
+        // 超管忽略所有表的租户过滤
+        if (SecurityContext.isSuperAdmin()) {
             return true;
         }
 
